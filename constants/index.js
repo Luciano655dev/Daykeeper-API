@@ -62,6 +62,10 @@ module.exports = {
     resetTokenExpiresTime: "1h",
     resetPasswordExpiresTime: 3600000, // 1 h
     registerCodeExpiresTime: 600000, // 10 min
+    twoFactorCodeExpiresTime: 600000, // 10 min (email OTP at login)
+    trustedDeviceExpiresTime: 30 * 24 * 60 * 60 * 1000, // 30 days
+    maxTwoFactorAttempts: 5, // wrong-code attempts before a challenge is locked
+    twoFactorBackupCodeCount: 10, // one-time recovery codes generated on TOTP enroll
     maxUsernameLength: 40,
     maxEmailLength: 320,
     maxPasswordLength: 50,

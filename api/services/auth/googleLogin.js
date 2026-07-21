@@ -45,7 +45,10 @@ async function googleLogin(props) {
     emailVerified: p.email_verified === true || p.email_verified === "true",
   })
 
-  return login({ user, deviceId, ip, userAgent })
+  // Google sign-in bypasses app-level 2FA (the Google account is itself a strong
+  // second factor), so we mint tokens directly. issueTokens still fires the
+  // new-device alert when the device hasn't been seen before.
+  return login.issueTokens({ user, deviceId, ip, userAgent })
 }
 
 module.exports = googleLogin

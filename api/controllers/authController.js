@@ -13,6 +13,11 @@ const forgetPassword = require("../services/auth/forgetPassword")
 const resetPassword = require("../services/auth/resetPassword")
 const requestDeleteAccountCode = require("../services/auth/requestDeleteAccountCode")
 const getUserData = require("../services/auth/getUserData")
+const verifyTwoFactor = require("../services/auth/verifyTwoFactor")
+const resendTwoFactorCode = require("../services/auth/resendTwoFactorCode")
+const startTwoFactorSetup = require("../services/auth/startTwoFactorSetup")
+const confirmTwoFactorSetup = require("../services/auth/confirmTwoFactorSetup")
+const disableTwoFactor = require("../services/auth/disableTwoFactor")
 
 // login
 const loginController = async (req, res) => {
@@ -41,6 +46,81 @@ const googleLoginController = async (req, res) => {
     })
 
     return res.status(code).json({ message, ...(props || {}) })
+  } catch (error) {
+    return res.status(500).json({ message: serverError(error.message) })
+  }
+}
+
+// verify second factor (completes a login that returned twoFactorRequired)
+const verifyTwoFactorController = async (req, res) => {
+  try {
+    const { code, message, props } = await verifyTwoFactor({
+      challengeId: req.body?.challengeId,
+      code: req.body?.code,
+      trustDevice: req.body?.trustDevice,
+      deviceId: req.body?.deviceId || null,
+      ip: req.ip,
+      userAgent: req.headers["user-agent"],
+    })
+
+    return res.status(code).json({ message, ...(props || {}) })
+  } catch (error) {
+    return res.status(500).json({ message: serverError(error.message) })
+  }
+}
+
+// resend the email OTP for an active 2FA login challenge
+const resendTwoFactorController = async (req, res) => {
+  try {
+    const { code, message } = await resendTwoFactorCode({
+      challengeId: req.body?.challengeId,
+    })
+
+    return res.status(code).json({ message })
+  } catch (error) {
+    return res.status(500).json({ message: serverError(error.message) })
+  }
+}
+
+// start 2FA enrollment (authed)
+const startTwoFactorSetupController = async (req, res) => {
+  try {
+    const { code, message, props } = await startTwoFactorSetup({
+      loggedUser: req.user,
+      method: req.body?.method,
+    })
+
+    return res.status(code).json({ message, ...(props || {}) })
+  } catch (error) {
+    return res.status(500).json({ message: serverError(error.message) })
+  }
+}
+
+// confirm 2FA enrollment (authed) -> returns backup codes
+const confirmTwoFactorSetupController = async (req, res) => {
+  try {
+    const { code, message, props } = await confirmTwoFactorSetup({
+      loggedUser: req.user,
+      challengeId: req.body?.challengeId || null,
+      code: req.body?.code,
+    })
+
+    return res.status(code).json({ message, ...(props || {}) })
+  } catch (error) {
+    return res.status(500).json({ message: serverError(error.message) })
+  }
+}
+
+// disable 2FA (authed, re-auth with password or current code)
+const disableTwoFactorController = async (req, res) => {
+  try {
+    const { code, message } = await disableTwoFactor({
+      loggedUser: req.user,
+      password: req.body?.password,
+      code: req.body?.code,
+    })
+
+    return res.status(code).json({ message })
   } catch (error) {
     return res.status(500).json({ message: serverError(error.message) })
   }
@@ -174,6 +254,11 @@ const userDataController = async (req, res) => {
 module.exports = {
   login: loginController,
   googleLogin: googleLoginController,
+  verifyTwoFactor: verifyTwoFactorController,
+  resendTwoFactor: resendTwoFactorController,
+  startTwoFactorSetup: startTwoFactorSetupController,
+  confirmTwoFactorSetup: confirmTwoFactorSetupController,
+  disableTwoFactor: disableTwoFactorController,
   register: registerController,
   refresh: refreshController,
   logout: logoutController,

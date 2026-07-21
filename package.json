@@ -42,9 +42,11 @@
     "multer-s3": "^2.10.0",
     "node-cron": "^3.0.3",
     "nodemailer": "^7.0.12",
+    "otplib": "^12.0.1",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "passport-local": "^1.0.0",
+    "qrcode": "^1.5.4",
     "sanitize-html": "^2.17.4",
     "sharp": "^0.33.5",
     "timezone-support": "^3.1.0"
