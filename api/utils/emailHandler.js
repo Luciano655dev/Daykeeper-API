@@ -2,6 +2,8 @@ const { sendMail } = require("./email/mailer")
 const {
   verificationTemplate,
   passwordResetTemplate,
+  twoFactorCodeTemplate,
+  newDeviceLoginTemplate,
   banTemplate,
   unbanTemplate,
   userDeletionTemplate,
@@ -179,9 +181,47 @@ const sendAccountDeletionCode = async (email, code) => {
   })
 }
 
+// ========== SECURITY ==========
+const sendTwoFactorCodeEmail = async ({ username, email, code }) => {
+  const { subject, html, text } = twoFactorCodeTemplate({ username, code })
+
+  await sendMail({
+    to: email,
+    subject,
+    html,
+    text,
+  })
+}
+
+const sendNewDeviceLoginEmail = async ({
+  username,
+  email,
+  device,
+  ip,
+  when,
+  secureUrl,
+}) => {
+  const { subject, html, text } = newDeviceLoginTemplate({
+    username,
+    device,
+    ip,
+    when,
+    secureUrl,
+  })
+
+  await sendMail({
+    to: email,
+    subject,
+    html,
+    text,
+  })
+}
+
 module.exports = {
   sendVerificationEmail,
   sendPasswordResetEmail,
+  sendTwoFactorCodeEmail,
+  sendNewDeviceLoginEmail,
 
   sendBanEmail,
   sendUnbanEmail,

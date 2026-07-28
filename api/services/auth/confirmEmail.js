@@ -67,20 +67,8 @@ const confirmEmail = async (props) => {
 
   // Wrong code
   if (user.verification_code_hash !== codeHash) {
-    // OPTIONAL SECURITY CHOICE:
-    // Your old code deleted the token on any wrong attempt.
-    // That’s harsh (fat-finger = locked out), but if you want the same behavior,
-    // keep this $unset. If you want better UX, remove this unset and add attempt limits.
-    await User.updateOne(
-      { _id: user._id },
-      {
-        $unset: {
-          verification_code_hash: 1,
-          verification_expires_at: 1,
-        },
-      }
-    )
-
+    // Keep the current code valid until its expiry. A typo should not force the
+    // user to request a new email; request-level rate limits handle brute force.
     return invalidValue("Verification code")
   }
 

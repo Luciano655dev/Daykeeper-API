@@ -80,6 +80,18 @@ const userSchema = mongoose.Schema({
     required: false,
   },
 
+  // Two-factor authentication (opt-in). `method` decides how the login
+  // challenge is satisfied: "email" (6-digit OTP) or "totp" (authenticator app).
+  // totpSecret/backupCodes are only populated once the user confirms enrollment.
+  twoFactor: {
+    enabled: { type: Boolean, default: false },
+    method: { type: String, enum: ["email", "totp"], default: "email" },
+    totpSecret: { type: String, default: null }, // base32; null until TOTP confirmed
+    pendingTotpSecret: { type: String, default: null }, // staged during setup, before confirm
+    enabledAt: { type: Date, default: null },
+    backupCodes: [{ type: String }], // sha256 hashes, single-use
+  },
+
   banned: { type: Boolean, default: false, required: false },
 
   status: {

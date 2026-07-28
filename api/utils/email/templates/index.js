@@ -1,6 +1,8 @@
 const { buildEmail, escapeHtml } = require("./base")
 const verificationTemplate = require("./verification")
 const passwordResetTemplate = require("./passwordReset")
+const twoFactorCodeTemplate = require("./twoFactorCode")
+const newDeviceLoginTemplate = require("./newDeviceLogin")
 const banTemplate = require("./ban")
 const unbanTemplate = require("./unban")
 const userDeletionTemplate = require("./userDeletion")
@@ -14,6 +16,8 @@ module.exports = {
   escapeHtml,
   verificationTemplate,
   passwordResetTemplate,
+  twoFactorCodeTemplate,
+  newDeviceLoginTemplate,
   banTemplate,
   unbanTemplate,
   userDeletionTemplate,
