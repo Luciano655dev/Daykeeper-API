@@ -20,6 +20,16 @@ const blockSchema = new mongoose.Schema(
     dateEnd: { type: Date },
     // image
     mediaId: { type: mongoose.Schema.Types.ObjectId, ref: "Media" },
+    // Journal-entry grouping. Blocks with the same entryId form one
+    // timestamped publish inside the Day Page.
+    entryId: { type: mongoose.Schema.Types.ObjectId, default: null },
+    publishedAt: { type: Date, default: null },
+    entryCreatedAt: { type: Date, default: null },
+    entryUpdatedAt: { type: Date, default: null },
+    entryVersion: { type: Number, default: 1 },
+    // Only legacy upload endpoints create draft blocks. Drafts are returned to
+    // the owner for compatibility but never exposed in public views or feeds.
+    draftId: { type: String, default: null },
     created_at: { type: Date, default: Date.now },
     updated_at: { type: Date, default: Date.now },
   },

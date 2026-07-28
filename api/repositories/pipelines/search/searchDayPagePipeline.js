@@ -20,7 +20,20 @@ function searchDayPagePipeline(searchQuery, mainUser) {
     : {}
 
   return [
-    { $match: { status: "public", ...contentMatch } },
+    { $match: { status: "public" } },
+    {
+      $set: {
+        blocks: {
+          $filter: {
+            input: { $ifNull: ["$blocks", []] },
+            as: "block",
+            cond: { $eq: [{ $ifNull: ["$$block.draftId", null] }, null] },
+          },
+        },
+      },
+    },
+    { $match: { $expr: { $gt: [{ $size: "$blocks" }, 0] } } },
+    ...(safeQuery ? [{ $match: contentMatch }] : []),
 
     // Lookup user — only active, verified, non-banned users
     {

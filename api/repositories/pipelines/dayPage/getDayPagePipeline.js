@@ -52,6 +52,20 @@ function getDayPagePipeline({ userId, dateKey, loggedUser }) {
       },
     },
 
+    // Owner-only legacy uploads can leave draft blocks on the page. Public
+    // readers never receive those blocks until a publish finalizes them.
+    {
+      $set: {
+        blocks: {
+          $filter: {
+            input: { $ifNull: ["$blocks", []] },
+            as: "block",
+            cond: { $eq: [{ $ifNull: ["$$block.draftId", null] }, null] },
+          },
+        },
+      },
+    },
+
     // Resolve media docs for image blocks
     {
       $lookup: {

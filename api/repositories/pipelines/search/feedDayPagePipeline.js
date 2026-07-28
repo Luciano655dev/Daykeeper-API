@@ -167,8 +167,23 @@ const feedDayPagePipeline = (mainUser, { dateStr = null, daysWindow = 30 } = {})
                   { $eq: ["$status", "public"] },
                   { $gte: ["$date", "$$dayStart"] },
                   { $lt: ["$date", "$$dayEnd"] },
-                  // Must have at least one block (skip empty/blank pages)
-                  { $gt: [{ $size: { $ifNull: ["$blocks", []] } }, 0] },
+                  // Must have at least one published block (skip drafts/empty pages)
+                  {
+                    $gt: [
+                      {
+                        $size: {
+                          $filter: {
+                            input: { $ifNull: ["$blocks", []] },
+                            as: "block",
+                            cond: {
+                              $eq: [{ $ifNull: ["$$block.draftId", null] }, null],
+                            },
+                          },
+                        },
+                      },
+                      0,
+                    ],
+                  },
                   {
                     $or: [
                       { $eq: ["$$viewerId", "$$uid"] },
@@ -182,6 +197,17 @@ const feedDayPagePipeline = (mainUser, { dateStr = null, daysWindow = 30 } = {})
                     ],
                   },
                 ],
+              },
+            },
+          },
+          {
+            $set: {
+              blocks: {
+                $filter: {
+                  input: { $ifNull: ["$blocks", []] },
+                  as: "block",
+                  cond: { $eq: [{ $ifNull: ["$$block.draftId", null] }, null] },
+                },
               },
             },
           },

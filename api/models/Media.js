@@ -15,6 +15,8 @@ const mediaSchema = mongoose.Schema({
   },
   uploadedBy: String,
   created_at: Date,
+  stagedFor: { type: String, default: null },
+  stagedDateKey: { type: String, default: null },
 
   status: {
     type: String,

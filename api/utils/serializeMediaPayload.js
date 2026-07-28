@@ -120,6 +120,71 @@ function shouldProjectUrlForKeyField(keyField) {
   )
 }
 
+function asDateValue(value) {
+  if (!value) return null
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? null : date
+}
+
+function addDayPageEntries(page) {
+  if (!isObject(page) || !Array.isArray(page.blocks) || !page.dateKey) return page
+
+  const groups = new Map()
+  const fallbackEntryId = String(page._id || `legacy-${page.dateKey}`)
+  const fallbackPublishedAt =
+    page.created_at || page.updated_at || page.date || new Date().toISOString()
+
+  for (const block of page.blocks) {
+    if (!isObject(block) || block.draftId) continue
+
+    const entryId = String(block.entryId || fallbackEntryId)
+    const publishedAt = block.publishedAt || fallbackPublishedAt
+    const createdAt = block.entryCreatedAt || page.created_at || publishedAt
+    const updatedAt =
+      block.entryUpdatedAt || block.updated_at || page.updated_at || createdAt
+    const version = Math.max(1, Number(block.entryVersion) || 1)
+
+    if (!groups.has(entryId)) {
+      groups.set(entryId, {
+        _id: entryId,
+        publishedAt,
+        createdAt,
+        updatedAt,
+        version,
+        edited: false,
+        blocks: [],
+      })
+    }
+
+    const entry = groups.get(entryId)
+    entry.blocks.push(block)
+    if ((asDateValue(updatedAt)?.getTime() || 0) > (asDateValue(entry.updatedAt)?.getTime() || 0)) {
+      entry.updatedAt = updatedAt
+    }
+    entry.version = Math.max(entry.version, version)
+  }
+
+  const entries = [...groups.values()]
+    .map((entry) => {
+      entry.blocks = [...entry.blocks]
+        .sort((a, b) => Number(a.order || 0) - Number(b.order || 0))
+        .map((block, order) => ({ ...block, order }))
+
+      const created = asDateValue(entry.createdAt)?.getTime() || 0
+      const updated = asDateValue(entry.updatedAt)?.getTime() || 0
+      entry.edited = updated > created + 1000
+      return entry
+    })
+    .sort((a, b) => {
+      const publishedDiff =
+        (asDateValue(b.publishedAt)?.getTime() || 0) -
+        (asDateValue(a.publishedAt)?.getTime() || 0)
+      return publishedDiff || String(b._id).localeCompare(String(a._id))
+    })
+
+  return { ...page, entries }
+}
+
 function serializeMediaPayload(value) {
   const normalizedId = tryNormalizeObjectIdLike(value)
   if (normalizedId) return normalizedId
@@ -156,10 +221,11 @@ function serializeMediaPayload(value) {
     }
   }
 
-  return next
+  return addDayPageEntries(next)
 }
 
 module.exports = {
   serializeMediaPayload,
   withMediaUrls,
+  addDayPageEntries,
 }

@@ -4,12 +4,17 @@ const {
 } = require("../../constants/index")
 const {
   getOrInitDayPage,
+  createEntry,
+  updateEntry,
+  deleteEntry,
+  updatePrivacy,
   upsertDayPage,
   updateBlock,
   deleteDayPage,
   getUserDayPage,
   addImageBlock,
   addMediaBlocks,
+  stageMedia,
 } = require("../services/dayPages/dayPages")
 const likeDayPage = require("../services/dayPages/likeDayPage")
 const getLikes = require("../services/dayPages/getLikes")
@@ -51,12 +56,87 @@ const upsertPageController = async (req, res) => {
   }
 }
 
+const createEntryController = async (req, res) => {
+  try {
+    const { code, message, data, ...rest } = await createEntry({
+      dateStr: req.params.date,
+      blocks: req.body?.blocks,
+      loggedUser: req.user,
+    })
+    return res.status(code).json({ message, data, ...rest })
+  } catch (error) {
+    return res.status(500).json({ message: serverError(error.toString()) })
+  }
+}
+
+const updateEntryController = async (req, res) => {
+  try {
+    const { code, message, data, ...rest } = await updateEntry({
+      dateStr: req.params.date,
+      entryId: req.params.entryId,
+      blocks: req.body?.blocks,
+      version: req.body?.version,
+      force: req.body?.force === true,
+      loggedUser: req.user,
+    })
+    return res.status(code).json({ message, data, ...rest })
+  } catch (error) {
+    return res.status(500).json({ message: serverError(error.toString()) })
+  }
+}
+
+const deleteEntryController = async (req, res) => {
+  try {
+    const { code, message, data, ...rest } = await deleteEntry({
+      dateStr: req.params.date,
+      entryId: req.params.entryId,
+      version: req.body?.version,
+      force: req.body?.force === true,
+      loggedUser: req.user,
+    })
+    return res.status(code).json({ message, data, ...rest })
+  } catch (error) {
+    return res.status(500).json({ message: serverError(error.toString()) })
+  }
+}
+
+const updatePrivacyController = async (req, res) => {
+  try {
+    const { code, message, data } = await updatePrivacy({
+      dateStr: req.params.date,
+      privacy: req.body?.privacy,
+      loggedUser: req.user,
+    })
+    return res.status(code).json({ message, data })
+  } catch (error) {
+    return res.status(500).json({ message: serverError(error.toString()) })
+  }
+}
+
 const updateBlockController = async (req, res) => {
   try {
     const { code, message, data } = await updateBlock({
       dateStr: req.params.date,
+      entryId: req.params.entryId,
       blockId: req.params.blockId,
       update: req.body,
+      loggedUser: req.user,
+    })
+    return res.status(code).json({ message, data })
+  } catch (error) {
+    return res.status(500).json({ message: serverError(error.toString()) })
+  }
+}
+
+const stageMediaController = async (req, res) => {
+  try {
+    const mediaDocs = req.mediaDocs || []
+    if (!mediaDocs.length) {
+      return res.status(400).json({ message: "No files uploaded" })
+    }
+    const { code, message, data } = await stageMedia({
+      dateStr: req.params.date,
+      mediaDocs,
       loggedUser: req.user,
     })
     return res.status(code).json({ message, data })
@@ -222,8 +302,13 @@ const uploadMediaBlocksController = async (req, res) => {
 
 module.exports = {
   getOwnPage: getOwnPageController,
+  createEntry: createEntryController,
+  updateEntry: updateEntryController,
+  deleteEntry: deleteEntryController,
+  updatePrivacy: updatePrivacyController,
   uploadImageBlock: uploadImageBlockController,
   uploadMediaBlocks: uploadMediaBlocksController,
+  stageMedia: stageMediaController,
   upsertPage: upsertPageController,
   updateBlock: updateBlockController,
   deletePage: deletePageController,

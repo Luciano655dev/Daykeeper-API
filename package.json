@@ -12,6 +12,7 @@
     "migrate:all-new-media": "node scripts/migrateAllToNewMedia.js",
     "migrate:profile-pictures": "node scripts/migrateProfilePicturesToPublic.js",
     "migrate:legacy-media": "node scripts/migrateLegacyMediaToNewBucket.js",
+    "migrate:day-page-entries": "node scripts/migrateDayPageEntries.js",
     "migrate:default-pfp": "node scripts/migrateDefaultProfilePicture.js"
   },
   "author": "",
